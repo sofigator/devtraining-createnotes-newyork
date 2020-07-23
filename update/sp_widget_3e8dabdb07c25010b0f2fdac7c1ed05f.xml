@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope, $rootScope) {
+  /* widget controller */
+  var c = this;
+
+	// Listen event (selectNote) and read event arguments (id) if any
+	$rootScope.$on('selectNote', function(event,data) {
+	// FOR TESTING PURPOSES: console.log('Listener caught NoteID: ' + $rootScope.noteID);
+
+		// this.server.get() calls the Server script and passes custom input
+		// to get a Promise
+		// including needed data (title, note, sys_id)
+		c.server.get({
+			// action -> input.action , in server code
+			action: 'getNote',
+			// noteID -> input.noteID , in server code
+			noteID: $rootScope.noteID
+			// after server responses with Promise (data.note object)
+			// add title, note and sys_id to specific variables to show in view
+		}).then(function(r) {
+			// set data title fron received data.note.title value .. and so on
+			c.data.title = r.data.note.title;
+			c.data.note = r.data.note.note;
+			c.data.noteID = r.data.note.sys_id;
+		});
+	});
+	
+	c.updateNote = function(updateType) {
+		c.server.get({
+			action: 'updateNote',
+			noteID: c.data.noteID,
+			noteBody: c.data.note,
+			noteTitle: c.data.title
+		}).then(function(r) {
+		});		
+	}
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css/>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>notes_body</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Notes Body</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+  /* populate the 'data' object */
+  /* e.g., data.table = $sp.getValue('table'); */
+
+	// input object is the data object received from Client Script controller!
+	// if input and input.noteID exists
+	if (input && input.noteID) {
+		// declare variable to have table as object
+		var noteGR = new GlideRecord('x_snc_createnotes_note');
+		// if noteID parameter exists in input object
+		if (noteGR.get(input.noteID)) {
+			// if getNote is equal with action parameter in input object
+			if (input.action == 'getNote') {
+				// set note attribute as empty object
+				data.note = {};
+				// You access GlideSPScriptable methods by using the global
+				// $sp object to interact with data and perform record operations
+				// in Service Portal widgets.
+				// get values (title, note, sys_id) to object (data.note)
+				// from table data (note)
+				$sp.getRecordValues(data.note, noteGR, "title, note, sys_id");
+			}
+			else if (input.action == 'updateNote') {
+				// take noteTitle and set it to title
+				noteGR.title = input.noteTitle;
+				// take noteBody and set it to note
+				noteGR.note = input.noteBody;
+				// write the values to table
+				noteGR.update();
+			}
+		}
+	}
+	
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2020-07-22 12:53:17</sys_created_on>
+        <sys_id>3e8dabdb07c25010b0f2fdac7c1ed05f</sys_id>
+        <sys_mod_count>36</sys_mod_count>
+        <sys_name>Notes Body</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_widget_3e8dabdb07c25010b0f2fdac7c1ed05f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2020-07-23 15:02:34</sys_updated_on>
+        <template><![CDATA[<div>
+  
+  <div class="panel panel-default" ng-show="c.data.noteID"> 
+    <div class="panel-heading clearfix">
+      <div class="row">
+        <div class="col-md-12">
+          <input
+                 class="form-control"
+                 id="note-title"
+                 ng-model="c.data.title"
+                 ng-change="c.updateNote('title')"
+                 ng-model-options="{debounce: 1000}"
+                 />
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+        <textarea
+                  class="form-control"
+                  id="note-body"
+                  ng-model="c.data.note"
+                  ng-change="c.updateNote('body')"
+                  ng-model-options="{debounce: 1000}"
+                  >
+        </textarea>
+      </div>
+  </div>
+  
+</div>]]></template>
+    </sp_widget>
+</record_update>
